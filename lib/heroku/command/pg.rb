@@ -210,9 +210,19 @@ private
     end
 
     def display_info_shared_postgresql(db)
-      response = heroku_shared_postgresql_client(db[:url]).show_info
-      response.each do |key, value|
-        display " #{key.gsub('_', ' ').capitalize}: #{value ? value : 0}"
+      db_info = heroku_shared_postgresql_client(db[:url]).show_info
+
+      db_info["info"].each do |i|
+        if i['value']
+          val = i['resolve_db_name'] ? name_from_url(i['value']) : i['value']
+          display_info i['name'], val
+        elsif i['values']
+          i['values'].each_with_index do |val,idx|
+            name = idx.zero? ? i['name'] : nil
+            val = i['resolve_db_name'] ? name_from_url(val) : val
+            display_info name, val
+          end
+        end
       end
     end
 
